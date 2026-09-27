@@ -13,6 +13,13 @@ import GoogleIntro from './components/GoogleIntro/GoogleIntro';
 
 function App() {
   const [showIntro, setShowIntro] = useState(true);
+  const [introComplete, setIntroComplete] = useState(false);
+
+  const handleIntroComplete = () => {
+    setIntroComplete(true);
+    // tiny delay so Hero starts its animation while overlay fades
+    setTimeout(() => setShowIntro(false), 50);
+  };
 
   // Prevent scrolling while intro is active
   useEffect(() => {
@@ -28,10 +35,10 @@ function App() {
 
   return (
     <div className="relative min-h-screen text-[#f5f5f5]">
-      {showIntro && <GoogleIntro onComplete={() => setShowIntro(false)} />}
+      {showIntro && <GoogleIntro onComplete={handleIntroComplete} />}
 
       {!showIntro && <Navbar />}
-      <CustomCursor />
+      {!showIntro && <CustomCursor />}
 
       <main>
 
@@ -98,7 +105,7 @@ function App() {
             />
           </div>
 
-          <Hero />
+          <Hero introComplete={introComplete} />
           <About />
         </div>
 

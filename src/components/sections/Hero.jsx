@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import heroImg from '../../assets/images/Hero/lalithheroimgfinal.png';
 import Magnetic from '../common/Magnetic';
@@ -6,7 +6,7 @@ import { personalData } from '../../data/personal';
 
 const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
 
-export default function Hero() {
+export default function Hero({ introComplete = false }) {
   const sectionRef = useRef(null);
 
   const { scrollYProgress } = useScroll({
@@ -31,6 +31,16 @@ export default function Hero() {
   // Cinematic fog rises from below as hero dissolves
   const fogOpacity = useTransform(scrollYProgress, [0.12, 0.75], [0, 1]);
   const fogY       = useTransform(scrollYProgress, [0, 1], [0, -110]);
+
+  // Gate: animate entrance after Google intro completes
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    if (introComplete) {
+      // slight delay so the google overlay fully fades before hero falls in
+      const t = setTimeout(() => setEntered(true), 120);
+      return () => clearTimeout(t);
+    }
+  }, [introComplete]);
 
   return (
     <section
@@ -95,11 +105,11 @@ export default function Hero() {
         style={{ y: contentY, opacity: contentOpacity }}
         className="relative z-10 w-full max-w-4xl mx-auto px-6 flex flex-col items-center justify-center text-center"
       >
+        {/* Heading — falls in from above, line by line */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.1 }}
-          transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+          initial={{ opacity: 0, y: -60 }}
+          animate={entered ? { opacity: 1, y: 0 } : { opacity: 0, y: -60 }}
+          transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
         >
           <h1
             className="font-body text-white/85"
@@ -128,7 +138,7 @@ export default function Hero() {
         </motion.div>
       </motion.div>
 
-      {/* ── FOOTER METADATA — fades with content ── */}
+      {/* ── FOOTER METADATA — falls in from above with stagger after heading ── */}
       <motion.div
         style={{
           opacity: contentOpacity,
@@ -136,44 +146,43 @@ export default function Hero() {
         }}
         className="absolute bottom-10 left-0 w-full px-8 lg:px-16 z-10"
       >
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: false, amount: 0.1 }}
-          transition={{ duration: 2, delay: 1 }}
-          className="flex flex-col md:flex-row justify-between items-center gap-4 w-full"
-        >
-          <Magnetic>
-          <a
-            href={`mailto:${personalData.email}`}
-            className="font-body text-[10px] sm:text-xs text-white/70 hover:text-white tracking-widest transition-colors text-center inline-block p-2"
-          >
-            {personalData.email}
-          </a>
-        </Magnetic>
-
-        <Magnetic>
-          <a
-            href={personalData.github}
-            target="_blank"
-            rel="noreferrer"
-            className="font-body text-[10px] sm:text-xs text-white/70 hover:text-white tracking-widest transition-colors text-center inline-block p-2"
-          >
-            {personalData.github.replace('https://', '')}
-          </a>
-        </Magnetic>
-
-        <Magnetic>
-          <a
-            href={personalData.linkedin}
-            target="_blank"
-            rel="noreferrer"
-            className="font-body text-[10px] sm:text-xs text-white/70 hover:text-white tracking-widest transition-colors text-center inline-block p-2"
-          >
-            {personalData.linkedin.replace('https://', '')}
-          </a>
-        </Magnetic>
-        </motion.div>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 w-full">
+          {[{
+            href: `mailto:${personalData.email}`,
+            label: personalData.email,
+            target: undefined,
+          }, {
+            href: personalData.github,
+            label: personalData.github.replace('https://', ''),
+            target: '_blank',
+          }, {
+            href: personalData.linkedin,
+            label: personalData.linkedin.replace('https://', ''),
+            target: '_blank',
+          }].map(({ href, label, target }, i) => (
+            <motion.div
+              key={href}
+              initial={{ opacity: 0, y: -40 }}
+              animate={entered ? { opacity: 1, y: 0 } : { opacity: 0, y: -40 }}
+              transition={{
+                duration: 0.9,
+                ease: [0.16, 1, 0.3, 1],
+                delay: 0.35 + i * 0.12,
+              }}
+            >
+              <Magnetic>
+                <a
+                  href={href}
+                  target={target}
+                  rel={target ? 'noreferrer' : undefined}
+                  className="font-body text-[10px] sm:text-xs text-white/70 hover:text-white tracking-widest transition-colors text-center inline-block p-2"
+                >
+                  {label}
+                </a>
+              </Magnetic>
+            </motion.div>
+          ))}
+        </div>
       </motion.div>
 
     </section>
